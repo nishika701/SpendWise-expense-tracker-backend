@@ -1,5 +1,6 @@
 package com.SpendWise.ExpenseTracker.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,16 +29,24 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if(authHeader != null && authHeader.startsWith("Bearer ")){
-            String token = authHeader.substring(7);
-            String email = jwtUtil.extractEmail(token);
+            try{
+                String token = authHeader.substring(7);
+                String email = jwtUtil.extractEmail(token);
 
-            if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
-                if(jwtUtil.validateToken(token,email)){
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
+                if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
+                    if(jwtUtil.validateToken(token,email)){
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 }
+            }
+            catch(JwtException e){
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
+                return;
             }
         }
         filterChain.doFilter(request,response);

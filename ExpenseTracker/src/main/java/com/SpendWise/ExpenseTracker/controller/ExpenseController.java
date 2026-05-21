@@ -1,6 +1,7 @@
 package com.SpendWise.ExpenseTracker.controller;
 
 import com.SpendWise.ExpenseTracker.dto.ExpenseRequestDTO;
+import com.SpendWise.ExpenseTracker.dto.ExpenseResponseDTO;
 import com.SpendWise.ExpenseTracker.model.Expense;
 import com.SpendWise.ExpenseTracker.service.ExpenseService;
 import jakarta.validation.Valid;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,38 +25,36 @@ public class ExpenseController {
     }
 
     @PostMapping
-    public ResponseEntity<Expense> createExpense(@Valid @RequestBody ExpenseRequestDTO expenseRequestDTO) {
-        Expense savedExpense = expenseService.createExpense(expenseRequestDTO);
-        return new ResponseEntity<>(savedExpense, HttpStatus.CREATED);
-    }
-
-    @GetMapping
-    public List<Expense> getAllExpenses() {
-        return expenseService.getAllExpenses();
+    public ResponseEntity<ExpenseResponseDTO> createExpense(@Valid @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+        ExpenseResponseDTO savedExpense = expenseService.createExpense(expenseRequestDTO);
+        return new ResponseEntity<ExpenseResponseDTO>(savedExpense, HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}/{fieldName}")//Because PATCH means “partially update an existing resource.”
-    public ResponseEntity<Expense> updateOneExpense(@PathVariable Long id, @PathVariable String fieldName, @RequestBody String newValue) {
-        Expense updateExp = expenseService.updateOneExpense(id, fieldName, newValue);
+    public ResponseEntity<ExpenseResponseDTO> updateOneExpense(@PathVariable Long id, @PathVariable String fieldName, @RequestBody String newValue) {
+        ExpenseResponseDTO updateExp = expenseService.updateOneExpense(id, fieldName, newValue);
         return ResponseEntity.ok(updateExp);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Expense> updateFields(@PathVariable Long id, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
-        Expense updateFields = expenseService.updateFields(id, expenseRequestDTO);
+    public ResponseEntity<ExpenseResponseDTO> updateFields(@PathVariable Long id, @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+        ExpenseResponseDTO updateFields = expenseService.updateFields(id, expenseRequestDTO);
         return ResponseEntity.ok(updateFields);
     }
 
     @GetMapping("/category")
-    public ResponseEntity<List<Expense>> filterByCategory(@RequestBody String categoryName) {
-        List<Expense> filterByCategory = expenseService.filterByCategory(categoryName);
-        return new ResponseEntity<List<Expense>>(filterByCategory, HttpStatus.OK);
+    public ResponseEntity<List<ExpenseResponseDTO>> filterByCategory(@RequestParam String categoryName) {
+        List<ExpenseResponseDTO> filterByCategory = expenseService.filterByCategory(categoryName);
+        return new ResponseEntity<>(filterByCategory, HttpStatus.OK);
     }
 
     @GetMapping
-    public List<Expense> getExpenses(@RequestParam(required = false) LocalDate startDate,
-                                     @RequestParam(required = false) LocalDate endDate,
-                                     @RequestParam(required = false) String sortBy) {
+    public List<ExpenseResponseDTO> getExpenses(@RequestParam(required = false) LocalDate startDate,
+                                                @RequestParam(required = false) LocalDate endDate,
+                                                @RequestParam(required = false) String sortBy) {
+        if((startDate == null && endDate != null) || (startDate != null && endDate == null)){
+            throw new RuntimeException("Both startDate and endDate are required for filtering");
+        }
         if (startDate != null && endDate != null) {
             return expenseService.filterByDateRange(startDate, endDate);
         }
@@ -78,7 +76,7 @@ public class ExpenseController {
     }
 
     @GetMapping("/{id}")
-    public Expense getExpense(@PathVariable Long id) {
+    public ExpenseResponseDTO getExpense(@PathVariable Long id) {
         return expenseService.getExpense(id);
     }
 
@@ -89,8 +87,8 @@ public class ExpenseController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Expense>> searchByTitle(@RequestParam String title){
-        List<Expense> expenses = expenseService.searchByTitle(title);
+    public ResponseEntity<List<ExpenseResponseDTO>> searchByTitle(@RequestParam String title){
+        List<ExpenseResponseDTO> expenses = expenseService.searchByTitle(title);
         return ResponseEntity.ok(expenses);
     }
 }

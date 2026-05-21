@@ -13,6 +13,7 @@ public class ExpenseRequestDTO {
     private String title;
 
     @Positive(message = "Amount must be greater than 0")
+    @NotNull(message = "Amount is required")
     private Double amount;
 
     @NotBlank(message = "Category is required")

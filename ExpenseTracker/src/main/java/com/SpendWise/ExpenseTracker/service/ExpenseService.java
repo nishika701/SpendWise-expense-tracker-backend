@@ -1,6 +1,7 @@
 package com.SpendWise.ExpenseTracker.service;
 
 import com.SpendWise.ExpenseTracker.dto.ExpenseRequestDTO;
+import com.SpendWise.ExpenseTracker.dto.ExpenseResponseDTO;
 import com.SpendWise.ExpenseTracker.exception.CustomExceptions;
 import com.SpendWise.ExpenseTracker.model.Expense;
 import com.SpendWise.ExpenseTracker.model.User;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -22,17 +22,35 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
 
+    private ExpenseResponseDTO mapToResponseDTO(Expense expense){
+        ExpenseResponseDTO dto = new ExpenseResponseDTO();
+        dto.setId(expense.getId());
+        dto.setTitle(expense.getTitle());
+        dto.setAmount(expense.getAmount());
+        dto.setCategory(expense.getCategory());
+        dto.setDate(expense.getDate());
+        return dto;
+    }
+
     public ExpenseService(ExpenseRepository expenseRepository,UserRepository userRepository){
         this.expenseRepository = expenseRepository;
         this.userRepository = userRepository;
     }
 
-    public Expense createExpense(ExpenseRequestDTO expenseRequestDTO){
+    private User getCurrentUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        //getContext() - used for getting current security context like find out who is making this request
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomExceptions.UserNotFoundException("User not found"));
+        return userRepository.findByEmail(email).orElseThrow(()->new CustomExceptions.UserNotFoundException("User not found"));
+    }
 
+    private Expense getExpenseForCurrentUser(Long id){
+        User user = getCurrentUser();
+        return  expenseRepository.findByIdAndUser(id,user).orElseThrow(()-> new RuntimeException("Expense not found"));
+    }
+
+    public ExpenseResponseDTO createExpense(ExpenseRequestDTO expenseRequestDTO){
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//        //getContext() - used for getting current security context like find out who is making this request
+        User user = getCurrentUser();
         Expense expense = new Expense();
         expense.setTitle(expenseRequestDTO.getTitle());
         expense.setAmount(expenseRequestDTO.getAmount());
@@ -40,22 +58,22 @@ public class ExpenseService {
         expense.setDate(expenseRequestDTO.getDate());
         expense.setUser(user);
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+        return mapToResponseDTO(savedExpense);
     }
 
-    public List<Expense> getAllExpenses(){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomExceptions.UserNotFoundException("User not found"));
-        return expenseRepository.findByUser(user);
+    public List<ExpenseResponseDTO> getAllExpenses(){
+        User user = getCurrentUser();
+        return  expenseRepository.findByUser(user).stream().map(this::mapToResponseDTO).toList();
     }
 
-    public Expense getExpense(Long id){
-        return expenseRepository.findById(id).orElseThrow(()-> new RuntimeException("Expense not found!"));
+    public ExpenseResponseDTO getExpense(Long id){
+        Expense expense = getExpenseForCurrentUser(id);
+        return mapToResponseDTO(expense);
     }
 
-    public Expense updateOneExpense(Long id,String fieldName,String newValue){
-        Expense expense = expenseRepository.findById(id).orElseThrow(()-> new RuntimeException("Expense not found"));
+    public ExpenseResponseDTO updateOneExpense(Long id,String fieldName,String newValue){
+        Expense expense = getExpenseForCurrentUser(id);
         switch(fieldName){
             case "title":
                 expense.setTitle(newValue);
@@ -73,44 +91,43 @@ public class ExpenseService {
             default:
                 throw new RuntimeException("Invalid field name");
         }
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+        return mapToResponseDTO(savedExpense);
     }
 
-    public Expense updateFields(Long id,ExpenseRequestDTO expenseRequestDTO){
-        Expense expense = expenseRepository.findById(id).orElseThrow(()-> new RuntimeException("Expense not found"));
+    public ExpenseResponseDTO updateFields(Long id,ExpenseRequestDTO expenseRequestDTO){
+        Expense expense = getExpenseForCurrentUser(id);
         expense.setTitle(expenseRequestDTO.getTitle());
         expense.setAmount(expenseRequestDTO.getAmount());
         expense.setDate(expenseRequestDTO.getDate());
         expense.setCategory(expenseRequestDTO.getCategory());
-        return expenseRepository.save(expense);
+
+        Expense savedExpense = expenseRepository.save(expense);
+        return mapToResponseDTO(savedExpense);
     }
 
     public String deleteExpense(Long id) {
-        Expense expense = expenseRepository.findById(id).orElseThrow(() -> new RuntimeException("Invalid ID!"));
+        Expense expense = getExpenseForCurrentUser(id);
         expenseRepository.delete(expense);
         return "Expense deleted successfully";
     }
 
-    public List<Expense> filterByCategory(String categoryName){
-        List<Expense> exp = new ArrayList<>();
-        List<Expense> expenses = getAllExpenses();
-        for(Expense e : expenses){
-            if(e.getCategory().equalsIgnoreCase(categoryName)){
-                exp.add(e);
-            }
-        }
-        return exp;
+    public List<ExpenseResponseDTO> filterByCategory(String categoryName){
+        User user = getCurrentUser();
+
+        return expenseRepository.findByUser(user).stream().filter(e -> e.getCategory().equalsIgnoreCase(categoryName))
+                .map(this::mapToResponseDTO).toList();
     }
 
-    public List<Expense> filterByDateRange(LocalDate startDate,LocalDate endDate){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new CustomExceptions.UserNotFoundException("User not found"));
-        return expenseRepository.findByUserAndDateBetween(user,startDate,endDate);
+    public List<ExpenseResponseDTO> filterByDateRange(LocalDate startDate,LocalDate endDate){
+        User user = getCurrentUser();
+
+        return expenseRepository.findByUserAndDateBetween(user,startDate,endDate).stream()
+                .map(this::mapToResponseDTO).toList();
     }
 
     public Double getMonthlyTotal(int month,int year){
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new CustomExceptions.UserNotFoundException("User not found"));
+        User user = getCurrentUser();
 
         LocalDate startDate = LocalDate.of(year,month,1);
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
@@ -121,13 +138,17 @@ public class ExpenseService {
     }
 
     public Map<String,Double> getCategoryWiseTotal(){
-        List<Expense> expenses = getAllExpenses();
-
-        return expenses.stream().collect(Collectors.groupingBy(Expense::getCategory,Collectors.summingDouble(Expense::getAmount)));
+        List<Expense> expenses = expenseRepository.findByUser(getCurrentUser());
+        return expenses.stream()
+                .collect(Collectors.groupingBy(
+                        Expense::getCategory,
+                        Collectors.summingDouble(Expense::getAmount)
+                ));
     }
 
-    public List<Expense> getAllExpensesSorted(String sortBy){
-        List<Expense> expenses = getAllExpenses();
+    public List<ExpenseResponseDTO> getAllExpensesSorted(String sortBy){
+        List<Expense> expenses = expenseRepository.findByUser(getCurrentUser());
+
         switch (sortBy){
             case "amount":
                 expenses.sort(Comparator.comparing(Expense::getAmount));
@@ -145,21 +166,18 @@ public class ExpenseService {
                 expenses.sort(Comparator.comparing(Expense::getCategory));
                 break;
             default:
-                throw new RuntimeException("Invalid sort field:" + sortBy);
+                throw new RuntimeException("Invalid sort field: " + sortBy);
         }
-        return expenses;
+        return expenses.stream().map(this::mapToResponseDTO).toList();
     }
 
-    public List<Expense> searchByTitle(String title){
-        List<Expense> expenses = getAllExpenses();
-        List<Expense> result = new ArrayList<>();
-
-        for(Expense exp : expenses){
-            if(exp.getTitle().toLowerCase().contains(title.toLowerCase())){
-                result.add(exp);
-            }
-        }
-        return expenses;
+    public List<ExpenseResponseDTO> searchByTitle(String title){
+        String searchText = title.toLowerCase();
+        return expenseRepository.findByUser(getCurrentUser())
+                .stream()
+                .filter(exp -> exp.getTitle().toLowerCase().contains(searchText))
+                .map(this :: mapToResponseDTO)
+                .toList();
     }
 }
 
@@ -168,3 +186,10 @@ public class ExpenseService {
 • entity = what database stores
 • service = combines user input + logged-in user + business rules
 */
+
+/*
+5.
+ExpenseController.java only filters by date if both startDate and endDate exist. If the user sends only one, it silently returns all expenses. Better to throw a clear error or support single-sided filtering.
+
+mvnw.cmd test passes now. So the app starts, but it is not fully logically correct yet. The most important fixes are: return result in search, enforce expense ownership by user, and stop returning User.password in API responses.
+ */
