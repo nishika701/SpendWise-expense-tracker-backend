@@ -13,7 +13,9 @@ SpendWise Expense Tracker is a Spring Boot REST API for tracking personal expens
 - Search expenses by title
 - Monthly expense total
 - Category-wise expense totals
-- H2 in-memory database for local development
+- PostgreSQL database configuration with environment variables
+- Expense responses use DTOs and do not expose user password data
+- Expense access is scoped to the logged-in user
 - Swagger UI dependency included through SpringDoc
 
 ## Tech Stack
@@ -23,7 +25,7 @@ SpendWise Expense Tracker is a Spring Boot REST API for tracking personal expens
 - Spring Web
 - Spring Security
 - Spring Data JPA
-- H2 Database
+- PostgreSQL
 - JWT with `jjwt`
 - Lombok
 - Maven
@@ -53,6 +55,7 @@ ExpenseTracker/
 
 - Java 17 or newer
 - Maven, or use the included Maven wrapper
+- PostgreSQL running locally
 
 ## Getting Started
 
@@ -60,6 +63,15 @@ From the repository root, move into the Spring Boot project:
 
 ```bash
 cd ExpenseTracker
+```
+
+Set the database environment variables.
+
+On Windows PowerShell:
+
+```powershell
+$env:DB_USERNAME="postgres"
+$env:DB_PASSWORD="your_postgres_password"
 ```
 
 Run the application:
@@ -82,25 +94,26 @@ http://localhost:8080
 
 ## Database
 
-The app uses an H2 in-memory database by default.
+The app uses PostgreSQL. Create a database named `expense_tracker`:
+
+```sql
+CREATE DATABASE expense_tracker;
+```
+
+The application reads the database username and password from environment variables:
 
 ```properties
-spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.username=sa
-spring.datasource.password=
-spring.h2.console.enabled=true
+spring.datasource.url=jdbc:postgresql://localhost:5432/expense_tracker
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+spring.jpa.hibernate.ddl-auto=update
 ```
 
-H2 Console:
+To inspect the database in pgAdmin, connect to `expense_tracker` and run:
 
-```text
-http://localhost:8080/h2-console
-```
-
-Use this JDBC URL:
-
-```text
-jdbc:h2:mem:testdb
+```sql
+SELECT * FROM users;
+SELECT * FROM expense;
 ```
 
 ## Authentication
@@ -157,7 +170,7 @@ Authorization: Bearer <token>
 | PUT | `/api/v1/expenses/{id}` | Replace expense fields | Yes |
 | PATCH | `/api/v1/expenses/{id}/{fieldName}` | Update one field | Yes |
 | DELETE | `/api/v1/expenses/{id}` | Delete an expense | Yes |
-| GET | `/api/v1/expenses/category` | Filter by category | Yes |
+| GET | `/api/v1/expenses/category?categoryName=Food` | Filter by category | Yes |
 | GET | `/api/v1/expenses?startDate=2026-04-01&endDate=2026-04-30` | Filter by date range | Yes |
 | GET | `/api/v1/expenses?sortBy=amount` | Sort expenses | Yes |
 | GET | `/api/v1/expenses/total/monthly?month=4&year=2026` | Get monthly total | Yes |
@@ -173,11 +186,27 @@ curl -X POST http://localhost:8080/api/v1/expenses \
   -d '{"title":"Groceries","amount":1500.0,"category":"Food","date":"2026-04-10"}'
 ```
 
+## Expense Response Format
+
+Expense APIs return `ExpenseResponseDTO` values, so user password data is not included in responses:
+
+```json
+{
+  "id": 1,
+  "title": "Groceries",
+  "amount": 1500.0,
+  "category": "Food",
+  "date": "2026-04-10"
+}
+```
+
+ID-based expense operations check both the expense id and the logged-in user, so users cannot read, update, or delete another user's expenses by guessing an id.
+
 ## Validation Rules
 
 - `email` must be a valid email address
 - `password` is required
 - `title` is required
-- `amount` must be greater than `0`
+- `amount` is required and must be greater than `0`
 - `category` is required
 - `date` is required and should use `yyyy-MM-dd`
