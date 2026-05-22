@@ -12,9 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -134,16 +132,20 @@ public class ExpenseService {
 
         List<Expense> expenses = expenseRepository.findByUserAndDateBetween(user,startDate,endDate);
         return expenses.stream().mapToDouble(Expense::getAmount).sum();
+        //.mapToDouble(expense -> expense.getAmount())
+        //why not 'this' is because getAmount() is not a method in service class,else it is possible!
 
     }
 
     public Map<String,Double> getCategoryWiseTotal(){
         List<Expense> expenses = expenseRepository.findByUser(getCurrentUser());
-        return expenses.stream()
-                .collect(Collectors.groupingBy(
-                        Expense::getCategory,
-                        Collectors.summingDouble(Expense::getAmount)
-                ));
+        Map<String,Double> totals = new HashMap<>();
+        for(Expense e : expenses){
+            String category = e.getCategory();
+            Double amount = e.getAmount();
+            totals.put(category,totals.getOrDefault(category,0.0) + amount);
+        }
+        return totals;
     }
 
     public List<ExpenseResponseDTO> getAllExpensesSorted(String sortBy){
@@ -173,11 +175,15 @@ public class ExpenseService {
 
     public List<ExpenseResponseDTO> searchByTitle(String title){
         String searchText = title.toLowerCase();
-        return expenseRepository.findByUser(getCurrentUser())
-                .stream()
-                .filter(exp -> exp.getTitle().toLowerCase().contains(searchText))
-                .map(this :: mapToResponseDTO)
-                .toList();
+        List<Expense> exp = expenseRepository.findByUser(getCurrentUser());
+        List<ExpenseResponseDTO> titles = new ArrayList<>();
+        for(Expense e : exp){
+            if(e.getTitle().toLowerCase().contains(searchText)){
+                ExpenseResponseDTO dto = mapToResponseDTO(e);
+                titles.add(dto);
+            }
+        }
+        return titles;
     }
 }
 
