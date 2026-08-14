@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api/v1";;
+const API_BASE = import.meta.env.VITE_API_URL || "/api/v1";
 
 const emptyExpense = {
   title: "",
@@ -38,8 +38,33 @@ function getCategoryIcon(category) {
   if (value.includes("entertain")) return "🎬";
   if (value.includes("education")) return "📚";
   if (value.includes("rent")) return "🏠";
+  if (!value) return "🗂️";
 
   return "💳";
+}
+
+// Reads the JWT payload (base64) to pull an email/name for the greeting.
+// This is display-only — it never trusts the token for auth decisions.
+function getNameFromToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const email = payload.sub || payload.email || "";
+
+    if (!email) return "there";
+
+    const namePart = email.split("@")[0];
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+  } catch {
+    return "there";
+  }
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 async function readResponse(response) {
@@ -64,6 +89,10 @@ async function readResponse(response) {
 export default function App() {
   const [token, setToken] = useState(
     () => localStorage.getItem("spendwise_token") || ""
+  );
+
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("spendwise_theme") === "dark"
   );
 
   const [authMode, setAuthMode] = useState("login");
@@ -133,6 +162,11 @@ export default function App() {
     [categoryTotals]
   );
 
+  const userName = useMemo(
+    () => (token ? getNameFromToken(token) : ""),
+    [token]
+  );
+
   useEffect(() => {
     if (!token) return;
 
@@ -140,6 +174,11 @@ export default function App() {
     loadCategoryTotals();
     loadMonthlyTotal();
   }, [token]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem("spendwise_theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   async function request(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, options);
@@ -154,6 +193,10 @@ export default function App() {
   function showError(err) {
     setError(err.message || "Something went wrong");
     setMessage("");
+  }
+
+  function toggleTheme() {
+    setDarkMode((current) => !current);
   }
 
   async function handleAuth(event) {
@@ -297,6 +340,7 @@ export default function App() {
     const payload = {
       ...expenseForm,
       amount: Number(expenseForm.amount),
+      category: expenseForm.category.trim() || "Uncategorized",
     };
 
     setLoading(true);
@@ -430,6 +474,15 @@ export default function App() {
   if (!token) {
     return (
       <main className="auth-shell">
+        <button
+          type="button"
+          className="theme-toggle auth-theme-toggle"
+          onClick={toggleTheme}
+          title="Toggle dark mode"
+        >
+          {darkMode ? "☀️" : "🌙"}
+        </button>
+
         <section className="auth-panel">
           <div className="auth-brand">
             <div className="brand-mark">S</div>
@@ -554,6 +607,15 @@ export default function App() {
           </div>
 
           <nav className="topbar-actions">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title="Toggle dark mode"
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
+
             <button className="header-add" onClick={openAddExpense}>
               <span>+</span>
               Add Expense
@@ -585,7 +647,9 @@ export default function App() {
         <section className="welcome-section">
           <div>
             <p className="eyebrow">Dashboard</p>
-            <h1>Good morning 👋</h1>
+            <h1>
+              {getGreeting()}, {userName} 👋
+            </h1>
             <p>Here's a quick look at your spending.</p>
           </div>
 
@@ -922,14 +986,14 @@ export default function App() {
 
                           <div>
                             <strong>{expense.title}</strong>
-                            <span>{expense.category}</span>
+                            <span>{expense.category || "Uncategorized"}</span>
                           </div>
                         </div>
                       </td>
 
                       <td>
                         <span className="category-pill">
-                          {expense.category}
+                          {expense.category || "Uncategorized"}
                         </span>
                       </td>
 
@@ -1048,7 +1112,7 @@ export default function App() {
               </div>
 
               <label>
-                Category
+                Category <span className="optional-tag">(optional)</span>
                 <input
                   value={expenseForm.category}
                   onChange={(event) =>
@@ -1057,8 +1121,7 @@ export default function App() {
                       category: event.target.value,
                     })
                   }
-                  placeholder="Food"
-                  required
+                  placeholder="Food (leave blank for Uncategorized)"
                 />
               </label>
 

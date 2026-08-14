@@ -1,4 +1,3 @@
-
 :root {
   color: #17201b;
   background: #f5f7f4;
@@ -21,8 +20,29 @@
   --muted: #707a74;
   --border: #e3e8e3;
   --surface: #ffffff;
+  --surface-muted: #f0f3f0;
+  --input-bg: #fbfcfa;
   --background: #f5f7f4;
   --danger: #b94331;
+
+  transition: background 200ms ease, color 200ms ease;
+}
+
+:root.dark {
+  color: #eef2ee;
+  background: #0d100e;
+
+  --green: #22a67f;
+  --green-dark: #1a8567;
+  --green-light: #163229;
+  --text: #eef2ee;
+  --muted: #97a49c;
+  --border: #262f28;
+  --surface: #161c17;
+  --surface-muted: #1b221c;
+  --input-bg: #1c231d;
+  --background: #0d100e;
+  --danger: #e2604a;
 }
 
 * {
@@ -33,6 +53,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: var(--text);
   background: var(--background);
 }
 
@@ -52,10 +73,38 @@ button:disabled {
 }
 
 /* =========================
+   THEME TOGGLE
+========================= */
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 1.05rem;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-muted);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 5;
+}
+
+/* =========================
    AUTH
 ========================= */
 
 .auth-shell {
+  position: relative;
   min-height: 100vh;
   display: grid;
   place-items: center;
@@ -71,7 +120,7 @@ button:disabled {
       rgba(211, 104, 75, 0.1),
       transparent 30%
     ),
-    #f5f7f4;
+    var(--background);
 }
 
 .auth-panel {
@@ -81,7 +130,7 @@ button:disabled {
   gap: 70px;
   align-items: center;
   padding: 58px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 24px;
   box-shadow: 0 30px 90px rgba(23, 32, 27, 0.1);
@@ -125,6 +174,7 @@ button:disabled {
 .auth-brand h1 {
   max-width: 580px;
   margin: 0;
+  color: var(--text);
   font-size: clamp(2.8rem, 5vw, 5.2rem);
   line-height: 0.98;
   letter-spacing: -0.055em;
@@ -146,7 +196,7 @@ button:disabled {
   display: grid;
   gap: 12px;
   margin-top: 32px;
-  color: #46514b;
+  color: var(--text);
   font-size: 0.92rem;
   font-weight: 650;
 }
@@ -166,7 +216,7 @@ button:disabled {
   display: grid;
   gap: 18px;
   padding: 30px;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 15px 45px rgba(23, 32, 27, 0.06);
@@ -174,6 +224,7 @@ button:disabled {
 
 .auth-heading h2 {
   margin: 0;
+  color: var(--text);
   font-size: 1.65rem;
   letter-spacing: -0.03em;
 }
@@ -189,7 +240,7 @@ button:disabled {
   grid-template-columns: 1fr 1fr;
   gap: 5px;
   padding: 5px;
-  background: #f0f3f0;
+  background: var(--surface-muted);
   border-radius: 12px;
 }
 
@@ -197,23 +248,30 @@ button:disabled {
   min-height: 42px;
   border: 0;
   border-radius: 9px;
-  color: #6a746e;
+  color: var(--muted);
   background: transparent;
   font-weight: 750;
 }
 
 .mode-switch .active {
   color: var(--text);
-  background: white;
+  background: var(--surface);
   box-shadow: 0 3px 12px rgba(23, 32, 27, 0.08);
 }
 
 label {
   display: grid;
   gap: 8px;
-  color: #46514b;
+  color: var(--text);
   font-size: 0.82rem;
   font-weight: 750;
+}
+
+.optional-tag {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 input,
@@ -222,8 +280,8 @@ select {
   min-height: 45px;
   padding: 11px 13px;
   color: var(--text);
-  background: #fbfcfa;
-  border: 1px solid #d6ded8;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
   border-radius: 10px;
   outline: none;
   transition:
@@ -234,7 +292,7 @@ select {
 
 input:focus,
 select:focus {
-  background: #ffffff;
+  background: var(--surface);
   border-color: var(--green);
   box-shadow: 0 0 0 4px rgba(14, 109, 88, 0.1);
 }
@@ -280,7 +338,7 @@ select:focus {
 .ghost-button {
   border: 1px solid var(--border);
   color: var(--text);
-  background: white;
+  background: var(--surface);
 }
 
 .status {
@@ -301,6 +359,16 @@ select:focus {
   background: #fff0ed;
 }
 
+:root.dark .success {
+  color: #8be3c0;
+  background: #123a2c;
+}
+
+:root.dark .error {
+  color: #ff9f8a;
+  background: #3a1712;
+}
+
 /* =========================
    APP HEADER
 ========================= */
@@ -314,8 +382,8 @@ select:focus {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(245, 247, 244, 0.88);
-  border-bottom: 1px solid rgba(220, 227, 221, 0.9);
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  border-bottom: 1px solid var(--border);
   backdrop-filter: blur(18px);
 }
 
@@ -336,6 +404,7 @@ select:focus {
 
 .brand strong {
   display: block;
+  color: var(--text);
   font-size: 0.95rem;
 }
 
@@ -373,13 +442,13 @@ select:focus {
   padding: 0 15px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  color: #46514b;
-  background: white;
+  color: var(--text);
+  background: var(--surface);
   font-weight: 700;
 }
 
 .profile-button:hover {
-  background: #f8faf8;
+  background: var(--surface-muted);
 }
 
 /* =========================
@@ -420,6 +489,7 @@ select:focus {
 
 .welcome-section h1 {
   margin: 0;
+  color: var(--text);
   font-size: clamp(2rem, 4vw, 3rem);
   letter-spacing: -0.045em;
 }
@@ -446,7 +516,7 @@ select:focus {
   flex-direction: column;
   justify-content: space-between;
   padding: 20px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 5px 20px rgba(23, 32, 27, 0.025);
@@ -494,8 +564,13 @@ select:focus {
 .metric strong {
   margin-top: 12px;
   overflow-wrap: anywhere;
+  color: var(--text);
   font-size: clamp(1.45rem, 2.5vw, 2rem);
   letter-spacing: -0.035em;
+}
+
+.primary-metric strong {
+  color: white;
 }
 
 .metric small {
@@ -524,7 +599,7 @@ select:focus {
 }
 
 .dashboard-card {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 5px 20px rgba(23, 32, 27, 0.025);
@@ -546,6 +621,7 @@ select:focus {
 .card-heading h2,
 .expenses-header h2 {
   margin: 0;
+  color: var(--text);
   font-size: 1.05rem;
   letter-spacing: -0.02em;
 }
@@ -579,6 +655,7 @@ select:focus {
 }
 
 .big-number {
+  color: var(--text);
   font-size: 2.25rem;
   font-weight: 850;
   letter-spacing: -0.05em;
@@ -596,9 +673,9 @@ select:focus {
   height: 125px;
   margin-top: 26px;
   overflow: hidden;
-  border-bottom: 1px solid #e8ede9;
+  border-bottom: 1px solid var(--border);
   background:
-    linear-gradient(#eef2ef 1px, transparent 1px);
+    linear-gradient(var(--surface-muted) 1px, transparent 1px);
   background-size: 100% 31px;
 }
 
@@ -655,7 +732,7 @@ select:focus {
   right: 0;
   display: flex;
   justify-content: space-around;
-  color: #98a19b;
+  color: var(--muted);
   font-size: 0.65rem;
 }
 
@@ -665,7 +742,7 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: 9px;
   color: var(--muted);
-  background: white;
+  background: var(--surface);
 }
 
 .category-list {
@@ -687,6 +764,7 @@ select:focus {
 }
 
 .category-info strong {
+  color: var(--text);
   font-size: 0.78rem;
 }
 
@@ -694,7 +772,7 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #4a554f;
+  color: var(--text);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -705,14 +783,14 @@ select:focus {
   display: grid;
   place-items: center;
   border-radius: 9px;
-  background: #f0f4f1;
+  background: var(--surface-muted);
 }
 
 .progress-track {
   height: 6px;
   overflow: hidden;
   border-radius: 99px;
-  background: #edf1ed;
+  background: var(--surface-muted);
 }
 
 .progress-bar {
@@ -781,11 +859,11 @@ select:focus {
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fafcfa;
+  background: var(--input-bg);
 }
 
 .search-box span {
-  color: #8b948f;
+  color: var(--muted);
   font-size: 1.25rem;
 }
 
@@ -803,8 +881,8 @@ select:focus {
 
 .filter-toggle {
   border: 1px solid var(--border);
-  color: #4b5650;
-  background: white;
+  color: var(--text);
+  background: var(--surface);
 }
 
 .filter-toggle.active {
@@ -818,9 +896,9 @@ select:focus {
   grid-template-columns: repeat(4, 1fr) auto;
   gap: 12px;
   padding: 16px 23px 20px;
-  border-top: 1px solid #edf0ed;
-  border-bottom: 1px solid #edf0ed;
-  background: #fafcfa;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--input-bg);
 }
 
 .advanced-filters label {
@@ -851,14 +929,14 @@ table {
 th,
 td {
   padding: 15px 23px;
-  border-top: 1px solid #edf0ed;
+  border-top: 1px solid var(--border);
   text-align: left;
   vertical-align: middle;
 }
 
 th {
-  color: #8a938d;
-  background: #fbfcfb;
+  color: var(--muted);
+  background: var(--input-bg);
   font-size: 0.67rem;
   font-weight: 850;
   letter-spacing: 0.07em;
@@ -866,7 +944,7 @@ th {
 }
 
 td {
-  color: #455049;
+  color: var(--text);
   font-size: 0.8rem;
 }
 
@@ -883,7 +961,7 @@ td {
   place-items: center;
   flex-shrink: 0;
   border-radius: 11px;
-  background: #eef5f0;
+  background: var(--green-light);
   font-size: 1rem;
 }
 
@@ -896,7 +974,7 @@ td {
 .expense-name span {
   display: block;
   margin-top: 3px;
-  color: #8a938d;
+  color: var(--muted);
   font-size: 0.68rem;
 }
 
@@ -906,14 +984,18 @@ td {
   align-items: center;
   padding: 0 10px;
   border-radius: 999px;
-  color: #49705f;
-  background: #edf6f1;
+  color: var(--green-dark);
+  background: var(--green-light);
   font-size: 0.68rem;
   font-weight: 800;
 }
 
+:root.dark .category-pill {
+  color: #8be3c0;
+}
+
 .date-cell {
-  color: #7c857f;
+  color: var(--muted);
 }
 
 .amount-cell {
@@ -937,8 +1019,8 @@ td {
   height: 32px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  color: #65706a;
-  background: white;
+  color: var(--muted);
+  background: var(--surface);
   font-size: 0.8rem;
 }
 
@@ -950,6 +1032,10 @@ td {
 .row-action.danger:hover {
   color: var(--danger);
   background: #fff0ed;
+}
+
+:root.dark .row-action.danger:hover {
+  background: #3a1712;
 }
 
 .empty-state {
@@ -973,6 +1059,7 @@ td {
 
 .empty-state h3 {
   margin: 15px 0 5px;
+  color: var(--text);
   font-size: 0.95rem;
 }
 
@@ -1000,7 +1087,7 @@ td {
 .expense-modal {
   width: min(520px, 100%);
   padding: 27px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.18);
@@ -1015,6 +1102,7 @@ td {
 
 .modal-heading h2 {
   margin: 0;
+  color: var(--text);
   font-size: 1.55rem;
   letter-spacing: -0.035em;
 }
@@ -1024,8 +1112,8 @@ td {
   height: 34px;
   border: 0;
   border-radius: 9px;
-  color: #69736d;
-  background: #f2f4f2;
+  color: var(--muted);
+  background: var(--input-bg);
   font-size: 1.3rem;
 }
 
@@ -1050,7 +1138,7 @@ td {
   left: 13px;
   z-index: 2;
   transform: translateY(-50%);
-  color: #78827c;
+  color: var(--muted);
   font-weight: 800;
 }
 
@@ -1105,6 +1193,11 @@ td {
 
   .auth-brand h1 {
     font-size: 2.7rem;
+  }
+
+  .auth-theme-toggle {
+    top: 14px;
+    right: 14px;
   }
 
   .topbar-inner {
