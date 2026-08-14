@@ -43,17 +43,10 @@ function getCategoryIcon(category) {
   return "💳";
 }
 
-// Reads the JWT payload (base64) to pull an email/name for the greeting.
-// This is display-only — it never trusts the token for auth decisions.
 function getNameFromToken(token) {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const email = payload.sub || payload.email || "";
-
-    if (!email) return "there";
-
-    const namePart = email.split("@")[0];
-    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    return payload.username || payload.sub?.split("@")[0] || "there";
   } catch {
     return "there";
   }
@@ -100,6 +93,7 @@ export default function App() {
   const [authForm, setAuthForm] = useState({
     email: "",
     password: "",
+    username: "",
   });
 
   const [expenses, setExpenses] = useState([]);
@@ -560,6 +554,24 @@ export default function App() {
                 required
               />
             </label>
+
+            {authMode === "register" && (
+              <label>
+                Username
+                <input
+                  type="text"
+                  value={authForm.username}
+                  onChange={(event) =>
+                    setAuthForm({
+                      ...authForm,
+                      username: event.target.value,
+                    })
+                  }
+                  placeholder="Your name"
+                  required
+                />
+              </label>
+            )}
 
             <label>
               Password
