@@ -68,7 +68,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://spendwise-expense-tracker-bice.vercel.app"
         ));
-        
+
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
