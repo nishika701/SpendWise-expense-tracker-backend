@@ -24,8 +24,13 @@ public class AuthService {
             throw new RuntimeException("User already exists");
         }
 
+        if(request.getUsername() == null || request.getUsername().isBlank()){
+            throw new RuntimeException("Username is required");
+        }
+
         User user = new User();
         user.setEmail(request.getEmail());
+        user.setUsername(request.getUsername());          // add this line
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
 
@@ -39,6 +44,6 @@ public class AuthService {
         if(!passwordEncoder.matches(request.getPassword(),user.getPassword())){
             throw new RuntimeException("Invalid email or password");
         }
-        return jwtUtil.generateToken(user.getEmail());
+        return jwtUtil.generateToken(user.getEmail(), user.getUsername());   // pass username too
     }
 }

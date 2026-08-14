@@ -16,7 +16,7 @@ public class JwtUtil {
     );
     private final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
 
-    public String generateToken(String email){
+    public String generateToken(String email, String username){
         return Jwts.builder()// builder is a pattern used to create an object step by step, instead of one big constructor
                 .setSubject(email)
                 /*
@@ -24,6 +24,7 @@ public class JwtUtil {
                 subject means: the main identity this token is about.
                 */
                 .setIssuedAt(new Date())
+                .claim("username", username)
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
                 .compact(); //finishes the token building process and converts it into the final JWT string
